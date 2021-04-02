@@ -1,28 +1,24 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-def install_requires():
-    requires = [
-        'secp256k1==0.13.2',
-        'pytest==6.1.2',
-        'mnemonic==0.19',
-        'python_binance_chain==0.1.20',
-        'pywallet==0.1.0',
-        'binance_chain==1.0.0'
-    ]
-    return requires
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 setup(
-    name='xchainpy',
-    packages=['xchainpy'],
-    version='0.1',
+    name='xchainpy_binance',
+    packages=find_packages(),
+    version='0.1.3',
     license='MIT',
-    description='Custom Binance client and utilities used by XChainJS clients',
-    author='Thorchain',
+    description='Custom Binance client and utilities used by XChainPY clients',
+    author='THORChain',
     author_email='',
-    url='https://github.com/xchainjs/xchainpy-lib',
-    download_url='https://github.com/xchainjs/xchainpy-lib/archive/v_01.tar.gz',
-    keywords=["BNB", "Binance", "XChain"],
-    install_requires=install_requires(),
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
+    keywords=["BNB", "Binance", "XChainpy_binance","THORChain"],
+    install_requires=required,
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
