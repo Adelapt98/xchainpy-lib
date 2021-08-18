@@ -1,4 +1,6 @@
+from xchainpy_client.models.tx_types import TxParams
 from xchainpy_client.models.types import Network, RootDerivationPaths, XChainClientParams
+from xchainpy_util.asset import Asset, AssetBTC
 
 
 class BitcoinClientParams(XChainClientParams):
@@ -40,3 +42,32 @@ class BitcoinClientParams(XChainClientParams):
     @blockstream_url.setter
     def blockstream_url(self, blockstream_url):
         self._blockstream_url = blockstream_url
+
+
+class BitcoinTxParams(TxParams):
+    def __init__(self, amount, recipient, memo='', fee_rate=None, wallet_index=0, asset:Asset=AssetBTC):
+        """Transfer BTC
+
+        :param amount: amount of BTC to transfer (don't multiply by 10**8)
+        :type amount: int, float, decimal
+        :param recipient: destination address
+        :type recipient: str
+        :param memo: optional memo for transaction
+        :type memo: str
+        :param fee_rate: fee rates for transaction
+        :type fee_rate: int
+        :param wallet_index: wallet_index
+        :type wallet_index: int
+        """
+        TxParams.__init__(self, AssetBTC, amount, recipient, memo, wallet_index)
+        self._fee_rate = fee_rate
+
+    @property
+    def fee_rate(self):
+        return self._fee_rate
+
+    @fee_rate.setter
+    def fee_rate(self, fee_rate):
+        self._fee_rate = fee_rate
+
+
