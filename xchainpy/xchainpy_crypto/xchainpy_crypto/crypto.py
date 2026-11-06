@@ -1,6 +1,6 @@
 from bip_utils import Bip39MnemonicValidator
 from mnemonic import Mnemonic
-from typing import Counter
+import hmac
 from .models.Keystore import Keystore
 from .models.KdfParams import KdfParams
 from Crypto.Random import get_random_bytes
@@ -32,12 +32,14 @@ def validate_phrase(phrase: str):
     :type phrase: str
     :returns: is the phrase valid or not (true or false)
     """
-    validator = Bip39MnemonicValidator(phrase)
-    return validator.IsValid() if hasattr(validator, 'IsValid') else validator.Validate()
+    # Modern bip_utils takes the mnemonic in IsValid(), not in the constructor.
+    return Bip39MnemonicValidator().IsValid(phrase)
 
 
 def generate_mnemonic(size=12, language="english"):
-    strength = size * 11 * 32 / 33
+    if type(size) is not int or size not in (12, 15, 18, 21, 24):
+        raise ValueError('BIP39 mnemonic size must be 12, 15, 18, 21 or 24 words')
+    strength = size * 11 * 32 // 33
     mnemo = Mnemonic(language)
     new_mnemonic = mnemo.generate(int(strength))
     return new_mnemonic
@@ -118,7 +120,7 @@ async def decrypt_from_keystore(keystore:Keystore, password:str):
         blake256.update((derived_key[16:32] + cipherbytes))
         mac = blake256.hexdigest()
 
-        if mac != keystore.crypto.mac:
+        if not hmac.compare_digest(mac, keystore.crypto.mac):
             raise Exception("Invalid Password")
 
         ctr = Counter.new(

@@ -26,7 +26,7 @@ print(asset.chain)
 print(asset.symbol)
 print(asset.ticker)
 
-asset = Asset(chain='BNB', symbol='RUNE-67C', ticker='RUNE')
+asset = Asset(chain='BTC', symbol='BTC', ticker='BTC')
 print(asset)
  ```
 
@@ -36,10 +36,10 @@ Chain
 ```python
 from xchainpy_util import chain
 from xchainpy_util.chain import Chain
-is_chain = chain.is_chain(Chain.Binance)
+is_chain = chain.is_chain(Chain.Bitcoin)
 print(is_chain)
 
-is_chain = chain.is_chain('BNB')
+is_chain = chain.is_chain('BTC')
 print(is_chain)
  ```
     

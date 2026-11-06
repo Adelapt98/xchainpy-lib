@@ -14,12 +14,12 @@ During configuration, the following can be passed in:
 ### Querying
 Querying the client for balances and transaction history. Transaction history is optional. 
 
-Optional blockchain-specific queries can be added here, such as Binance Chain market information.
+Optional blockchain-specific queries can be added in dedicated chain clients.
 
 ### Transactions
 Making transfers.
 
-Optional blockchain-specific transactions can be added here, such as Binance Chain freeze/unfreeze.
+Optional blockchain-specific transactions can be added in dedicated chain clients.
 
 ---- 
 
@@ -222,7 +222,7 @@ get_fees() -> xchainpy_client.models.types.Fees
 **Example**
 
 ```python
-# Binance Chain
+# Example fee response (illustrative only)
 { # xchainpy_client.models.types.Fees
   fastest : 0.0001125
   fast : 0.0001125
@@ -236,13 +236,11 @@ The fee should always be *rate*, which is units per transaction size. The size s
 
 * Bitcoin: 250 bytes is typical, so feeRate of 10 is 10 sats per byte, eg, 2500 sats 
 * Ethereum: gwei is standard, so a feeRate of 20 would be interpreted as 20 GWEI 
-* Binance Chain: fixed size, so the feeRate is ignored. 
 
 **Broadcast URLs**
 
 ```
 https://api.blockchair.com/{:chain}/push/transaction
-https://dex.binance.org/api/v1/broadcast
 ```
 
 ```python

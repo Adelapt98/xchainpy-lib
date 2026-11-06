@@ -4,7 +4,7 @@ from datetime import datetime
 import time
 from abc import ABC, abstractmethod
 import json
-import http3
+import httpx
 
 from xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy_util.asset import Asset
@@ -96,8 +96,8 @@ class BaseXChainClient(interface.IXChainClient):
 
             api_url += endpoint
 
-            client = http3.AsyncClient(timeout=5)
-            response = await client.get(api_url)
+            async with httpx.AsyncClient(timeout=5) as client:
+                response = await client.get(api_url)
 
             if response.status_code == 200:
                 return json.loads(response.content.decode('utf-8')) 
@@ -134,7 +134,11 @@ class BaseXChainClient(interface.IXChainClient):
         :type wallet_index: int
         :returns: The derivation path based on the network.
         """
-        return f"{self.root_derivation_paths[self.network]}{wallet_index}" if self.root_derivation_paths else ''
+        if not isinstance(wallet_index, int) or isinstance(wallet_index, bool) or wallet_index < 0:
+            raise ValueError('wallet_index must be a non-negative integer')
+        if not self.root_derivation_paths:
+            return ''
+        return f"{getattr(self.root_derivation_paths, self.network)}{wallet_index}"
 
     def purge_client(self):
         """Purge client

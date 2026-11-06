@@ -1,6 +1,5 @@
 import enum
 class Chain(enum.Enum):
-    Binance = "BNB"
     Bitcoin = "BTC"
     Ethereum = "ETH"
     THORChain = "THOR"
@@ -9,7 +8,6 @@ class Chain(enum.Enum):
     BitcoinCash = "BCH"
     Litecoin = "LTC"
 
-BNBCHAIN = "BNB"
 BTCCHAIN = "BTC"
 ETHCHAIN = "ETH"
 THORCHAIN = "THOR"
@@ -18,7 +16,7 @@ POLKADOTCHAIN = "POLKA"
 BITCOINCASH = "BCH"
 LTCCHAIN = "LTC"
 
-chains = ["BNB", "BTC", "ETH", "THOR", "GAIA", "POLKA", "BCH", "LTC"]
+chains = ["BTC", "ETH", "THOR", "GAIA", "POLKA", "BCH", "LTC"]
 
 def is_chain(chain):
     """Is the argument a chain or not

@@ -1,7 +1,7 @@
 from . chain import Chain, is_chain
 
 class Asset:
-    _chain = None # "BNB" | "BTC" | "ETH" | "THOR" | "GAIA" | "POLKA"
+    _chain = None # "BTC" | "ETH" | "THOR" | "GAIA" | "POLKA" | "BCH" | "LTC"
     _symbol = _ticker = '' 
 
     def __init__(self, chain, symbol, ticker = ''):
@@ -36,7 +36,7 @@ class Asset:
     def __str__(self):
         """Get an asset from a string
 
-        :returns: the asset (BNB.BNB or BNB.RUNE)
+        :returns: the asset (e.g., BTC.BTC)
         """
         chain = self.chain
         if type(self.chain) != str:
@@ -81,13 +81,6 @@ class Asset:
         self._ticker = ticker
 
 """
-Base "chain" asset of Binance chain.
-Based on definition in Thorchain `common`
-@see https://gitlab.com/thorchain/thornode/-/blob/master/common/asset.go#L12-24
-"""
-AssetBNB = Asset(chain=Chain.Binance, symbol='BNB', ticker='BNB')
-
-"""
 Base "chain" asset on bitcoin main net.
 Based on definition in Thorchain `common`
 @see https://gitlab.com/thorchain/thornode/-/blob/master/common/asset.go#L12-24
@@ -118,20 +111,6 @@ AssetETH = Asset(chain=Chain.Ethereum, symbol='ETH', ticker='ETH')
 RUNE_TICKER = 'RUNE'
 
 """
-Base "chain" asset for RUNE-67C on Binance test net.
-Based on definition in Thorchain `common`
-@see https://gitlab.com/thorchain/thornode/-/blob/master/common/asset.go#L12-24
-"""
-AssetRune67C = Asset(chain=Chain.Binance, symbol='RUNE-67C', ticker=RUNE_TICKER)
-
-"""
-Base "chain" asset for RUNE-B1A on Binance main net.
-Based on definition in Thorchain `common`
-@see https://gitlab.com/thorchain/thornode/-/blob/master/common/asset.go#L12-24
-"""
-AssetRuneB1A = Asset(chain=Chain.Binance, symbol='RUNE-B1A', ticker=RUNE_TICKER)
-
-"""
 Base "chain" asset on thorchain main net.
 Based on definition in Thorchain `common`
 @see https://gitlab.com/thorchain/thornode/-/blob/master/common/asset.go#L12-24
@@ -150,4 +129,4 @@ Base "chain" asset for RUNE on ethereum test net.
 Based on definition in Thorchain `common`
 @see https://gitlab.com/thorchain/thornode/-/blob/master/common/asset.go#L12-24
 """
-AssetRuneERC20 = Asset(chain=Chain.Ethereum, symbol=f'{RUNE_TICKER}-0xd601c6A3a36721320573885A8d8420746dA3d7A0', ticker=RUNE_TICKER)
+AssetRuneERC20Testnet = Asset(chain=Chain.Ethereum, symbol=f'{RUNE_TICKER}-0xd601c6A3a36721320573885A8d8420746dA3d7A0', ticker=RUNE_TICKER)

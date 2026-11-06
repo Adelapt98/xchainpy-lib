@@ -3,24 +3,22 @@ from xchainpy_util.asset import Asset
 
 class TestAsset:
 
-    bnb_asset = Asset('BNB', 'BNB', 'BNB')
-
     def test_create_asset(self):
-        asset = Asset('BNB', 'RUNE-67C')
-        assert asset.chain == 'BNB'
-        assert asset.symbol == 'RUNE-67C'
-        assert asset.ticker == 'RUNE'
+        asset = Asset('ETH', 'USDT-0x1234')
+        assert asset.chain == 'ETH'
+        assert asset.symbol == 'USDT-0x1234'
+        assert asset.ticker == 'USDT'
 
     def test_invalid_chain(self):
         with pytest.raises(Exception) as err:
-            Asset('invalid chain', 'BNB', 'BNB')
+            Asset('invalid chain', 'BTC', 'BTC')
         assert str(err.value) == "the chain is invalid"
 
     def test_asset_to_string(self):
-        asset = Asset('BNB', 'RUNE-67C', 'RUNE')
-        assert str(asset) == 'BNB.RUNE-67C'
+        asset = Asset('ETH', 'USDT-0x1234', 'USDT')
+        assert str(asset) == 'ETH.USDT-0x1234'
 
     def test_asset_equal(self):
-        asset = Asset('BNB', 'RUNE-67C', 'RUNE')
-        asset2 = Asset('BNB', 'RUNE-67C', 'RUNE')
+        asset = Asset('ETH', 'USDT-0x1234', 'USDT')
+        asset2 = Asset('ETH', 'USDT-0x1234', 'USDT')
         assert asset == asset2
