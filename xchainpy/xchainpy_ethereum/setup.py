@@ -19,7 +19,7 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_ethereum',
     keywords=["ETH", "Ethereum", "XChainpy_ethereum","THORChain", "web3"],
-    install_requires=["web3>=5.22.0", "websockets>=9.1",'xchainpy_client>=0.1.6',
+    install_requires=["web3>=8,<9", 'requests>=2.31,<3', 'xchainpy_client>=0.1.6',
                       'xchainpy_crypto>=0.1.7', 'xchainpy_util>=0.1.8'],
     classifiers=[
         'Intended Audience :: Developers',

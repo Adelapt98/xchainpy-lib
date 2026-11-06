@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_crypto',
     keywords=["THORChain", "XChainpy","XChainpy_crypto"],
-    install_requires=['mnemonic>=0.18', 'bip_utils==1.11.1', 'pycryptodome==3.11.0'],
+    install_requires=['mnemonic>=0.21,<1', 'bip_utils>=2.12,<3', 'pycryptodome>=3.20,<4'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',

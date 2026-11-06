@@ -15,7 +15,7 @@ setup(
     author_email='',
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_bitcoincash',
     keywords=["THORChain", "XChainpy","XChainpy_bitcoincash"],
-    install_requires=['mnemonic>=0.18', 'bitcash>=0.6.1', 'cashaddress_regtest>=1.1.0', 'cashaddress>=1.0.6', 'http3>=0.6.7', 'xchainpy_client>=0.1.6', 'xchainpy_crypto>=0.1.11', 'xchainpy_util>=0.1.8', 'bip_utils==1.11.1'],
+    install_requires=['mnemonic>=0.21,<1', 'bitcash>=1.2,<2', 'cashaddress>=1.0.6', 'httpx>=0.27,<1', 'xchainpy_client>=0.1.6', 'xchainpy_crypto>=0.1.11', 'xchainpy_util>=0.1.8', 'bip_utils>=2.12,<3'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',

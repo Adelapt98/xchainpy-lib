@@ -15,7 +15,7 @@ setup(
     author_email='',
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_client',
     keywords=["THORChain", "XChainpy","xchainpy_client"],
-    install_requires=['xchainpy_util>=0.1.8', 'xchainpy_crypto>=0.1.7', 'http3>=0.6.7'],
+    install_requires=['xchainpy_util>=0.1.8', 'xchainpy_crypto>=0.1.7', 'httpx>=0.27,<1'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
