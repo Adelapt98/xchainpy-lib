@@ -1,7 +1,7 @@
 from typing import List
 from . import utils
 from .models.api_types import AddressBalance, Block, Transaction, TransactionInput, TransactionOutput, TxUnspent
-import http3
+import httpx
 import json
 
 def to_haskoin_network(network: str):
@@ -22,7 +22,7 @@ async def get_account(haskoin_url:str, network:str, address:str) -> AddressBalan
     try:
         api_url = f'{haskoin_url}/{to_haskoin_network(network)}/address/{address}/balance'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -55,7 +55,7 @@ async def get_transactions(haskoin_url:str, network:str, address:str, offset:int
         api_url = f'{haskoin_url}/{to_haskoin_network(network)}/address/{address}/transactions/full'
         api_url += f'?offset={offset}&limit={limit}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -82,7 +82,7 @@ async def get_transaction(haskoin_url:str, network:str, tx_id:str):
     try:
         api_url = f'{haskoin_url}/{to_haskoin_network(network)}/transaction/{tx_id}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -106,7 +106,7 @@ async def get_suggested_tx_fee():
     try:
         api_url = 'https://app.bitgo.com/api/v2/bch/tx/fee'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -138,7 +138,7 @@ async def get_unspent_transactions(haskoin_url, network, address):
 
         api_url = f'{haskoin_url}/{to_haskoin_network(network)}/address/{address}/unspent?limit={account.txs}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -162,7 +162,7 @@ async def get_unspent_transactions(haskoin_url, network, address):
 #     try:
 #         api_url = f'{client_url}/transactions'
 
-#         client = http3.AsyncClient(timeout=5)
+#         client = httpx.AsyncClient(timeout=5)
 #         response = await client.post(url=api_url, data=tx_hex)
 
 #         if response.status_code == 200:

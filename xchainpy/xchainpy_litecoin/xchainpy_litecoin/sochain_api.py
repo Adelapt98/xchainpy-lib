@@ -1,5 +1,5 @@
 import json
-import http3
+import httpx
 from xchainpy_client.models.balance import Balance
 from xchainpy_util.asset import AssetLTC
 
@@ -23,7 +23,7 @@ async def get_balance(sochain_url:str, network:str, address:str):
     try:
         api_url = f'{sochain_url}/get_address_balance/{to_sochain_network(network)}/{address}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -54,7 +54,7 @@ async def get_transactions(sochain_url:str, network:str, address:str):
     try:
         api_url = f'{sochain_url}/address/{to_sochain_network(network)}/{address}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -78,7 +78,7 @@ async def get_tx(sochain_url:str, network:str, hash:str):
     try:
         api_url = f'{sochain_url}/get_tx/{to_sochain_network(network)}/{hash}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -101,7 +101,7 @@ async def get_suggested_tx_fee():
     try:
         api_url = 'https://app.bitgo.com/api/v2/ltc/tx/fee'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -131,7 +131,7 @@ async def get_unspent_txs(sochain_url, network, address, starting_from_tx_id=Non
         if starting_from_tx_id:
             api_url += f'/{starting_from_tx_id}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -158,7 +158,7 @@ async def broadcast_tx(sochain_url, network, tx_hex):
     try:
         api_url = f'{sochain_url}/send_tx/{to_sochain_network(network)}'
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         response = await client.post(url=api_url, data={'tx_hex': tx_hex})
 
         if response.status_code == 200:

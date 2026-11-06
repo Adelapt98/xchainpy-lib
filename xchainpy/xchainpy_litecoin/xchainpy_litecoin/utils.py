@@ -62,7 +62,7 @@ def validate_address(network, address):
     :returns: True or False
     """
     try:
-        address = Address.import_address(address=address, network=(
+        address = Address.parse(address=address, network=(
             'litecoin' if network == 'mainnet' else 'litecoin_testnet'))
         return True
     except:
@@ -115,19 +115,15 @@ def compile_memo(memo: str):
     metadata_len = len(metadata)
 
     if metadata_len <= 75:
-        # length byte + data (https://en.bitcoin.it/wiki/Script)
-        payload = bytearray((metadata_len,))+metadata
-    elif metadata_len <= 256:
-        # OP_PUSHDATA1 format
-        payload = "\x4c"+bytearray((metadata_len,))+metadata
+        payload = bytes((metadata_len,)) + metadata
+    elif metadata_len <= 255:
+        payload = b'\x4c' + bytes((metadata_len,)) + metadata
+    elif metadata_len <= 65535:
+        payload = b'\x4d' + metadata_len.to_bytes(2, 'little') + metadata
     else:
-        payload = "\x4d"+bytearray((metadata_len % 256,))+bytearray(
-            (int(metadata_len/256),))+metadata  # OP_PUSHDATA2 format
+        raise ValueError('Memo exceeds the maximum OP_PUSHDATA2 size')
 
-    compiled_memo = binascii.b2a_hex(payload).decode('utf-8')
-    compiled_memo = '6a' + compiled_memo
-    compiled_memo = binascii.unhexlify(compiled_memo)
-    return compiled_memo
+    return b'\x6a' + payload
 
 def get_fee(inputs: List[UTXO], fee_rate: float, data: Optional[bytes]=None):
     """Get the transaction fee

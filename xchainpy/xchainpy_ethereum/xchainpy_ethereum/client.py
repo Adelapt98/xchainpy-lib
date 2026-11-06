@@ -2,7 +2,8 @@ import asyncio
 import json
 import os
 import requests
-from web3 import Web3, WebsocketProvider, Account
+from decimal import Decimal
+from web3 import Web3, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy, medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_ethereum.models.asset import Asset
 from xchainpy_ethereum.models.client_types import EthereumClientParams
@@ -59,9 +60,15 @@ class Client(BaseXChainClient, IEthereumClient):
         self.account = self.w3.eth.account.from_mnemonic(mnemonic=params.phrase)
 
     def set_wss_provider(self, wss_provider: str):
-        self.w3 = Web3(WebsocketProvider(wss_provider))
+        # web3.py 8 exposes WebSocketProvider only through AsyncWeb3. This
+        # synchronous client requires a JSON-RPC HTTP endpoint instead.
+        if wss_provider.startswith('wss://') and '.infura.io/ws/v3/' in wss_provider:
+            wss_provider = wss_provider.replace('wss://', 'https://', 1).replace('/ws/v3/', '/v3/', 1)
+        if not wss_provider.startswith(('https://', 'http://')):
+            raise ValueError('Provide an HTTP(S) Ethereum JSON-RPC URL; generic websocket URLs are no longer supported')
+        self.w3 = Web3(Web3.HTTPProvider(wss_provider, request_kwargs={'timeout': 10}))
         if not self.is_web3_connected():
-            raise Exception("websocket provider error")
+            raise ConnectionError("Ethereum JSON-RPC provider is unreachable")
 
     def set_etherscan_token(self, etherscan_token: str):
         self.etherscan_token = etherscan_token
@@ -71,7 +78,7 @@ class Client(BaseXChainClient, IEthereumClient):
         Returns:
             bool
         """
-        return self.w3.isConnected()
+        return self.w3.is_connected()
 
     def purge_client(self):
         """Purge Client
@@ -88,7 +95,7 @@ class Client(BaseXChainClient, IEthereumClient):
         """Get explorer url
         :returns: the explorer url for binance chain based on the network
         """
-        return 'https://ropsten.etherscan.io' if self.network == 'testnet' else 'https://etherscan.io'
+        return 'https://sepolia.etherscan.io' if self.network == 'testnet' else 'https://etherscan.io'
 
     def get_explorer_address_url(self, address: str) -> str:
         """Get the explorer url for the given address
@@ -129,7 +136,7 @@ class Client(BaseXChainClient, IEthereumClient):
             bool
 
         """
-        return self.w3.isAddress(address)
+        return self.w3.is_address(address)
 
     async def get_abi(self, contract_address):
         """Get abi description of a non ERC-20 contract
@@ -150,12 +157,17 @@ class Client(BaseXChainClient, IEthereumClient):
             os.makedirs(resource_path, exist_ok=True)
             if not self.etherscan_token:
                 raise Exception("undefined ether api token")
-            if self.network == 'mainnet':
-                url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.etherscan_token}'
-            else:
-                url = f'https://api-ropsten.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.etherscan_token}'
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-            r = requests.get(url, headers=headers).json()
+            # Etherscan API V2 uses a shared endpoint and a chain-specific ID.
+            params = {
+                'chainid': 1 if self.network == 'mainnet' else 11155111,
+                'module': 'contract',
+                'action': 'getabi',
+                'address': contract_address,
+                'apikey': self.etherscan_token,
+            }
+            response = requests.get('https://api.etherscan.io/v2/api', params=params, timeout=10)
+            response.raise_for_status()
+            r = response.json()
             if r["status"] != '1':
                 raise Exception("error getting abi file")
             with open(path, 'w+') as o:
@@ -193,7 +205,7 @@ class Client(BaseXChainClient, IEthereumClient):
         if not address:
             address = self.get_address()
         if not asset:
-            return self.w3.fromWei(self.w3.eth.get_balance(address), 'ether')
+            return self.w3.from_wei(self.w3.eth.get_balance(address), 'ether')
         else:
             assert asset.contract, "asset contract address not set"
             contract = await self.get_contract(asset.contract)
@@ -255,12 +267,12 @@ class Client(BaseXChainClient, IEthereumClient):
             tx = {
                 'nonce': nonce,
                 'to': recipient,
-                'value': self.w3.toWei(amount, 'ether'),
+                'value': self.w3.to_wei(amount, 'ether'),
                 'gas': gas_limit,
                 'gasPrice': gas_price,
             }
             signed_tx = self.account.sign_transaction(tx)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             return tx_hash
         else:
             tx = {
@@ -270,9 +282,10 @@ class Client(BaseXChainClient, IEthereumClient):
             }
             token_contract = await self.get_contract(contract_address=asset.contract)
             decimal = token_contract.functions.decimals().call()
-            raw_tx = token_contract.functions.transfer(recipient, amount*10**decimal).buildTransaction(tx)
+            token_amount = int(Decimal(str(amount)) * (10 ** decimal))
+            raw_tx = token_contract.functions.transfer(recipient, token_amount).build_transaction(tx)
             signed_tx = self.account.sign_transaction(raw_tx)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
             return receipt
 
@@ -296,7 +309,7 @@ class Client(BaseXChainClient, IEthereumClient):
         Returns:
 
         """
-        if not nonce:
+        if nonce is None:
             nonce = self.w3.eth.get_transaction_count(self.get_address())
         if not gas_price:
             gas_price = self.gas_price
@@ -305,7 +318,7 @@ class Client(BaseXChainClient, IEthereumClient):
         if eth_to_be_sent != 0:
             tx = {
                 'nonce': nonce,
-                'value': self.w3.toWei(eth_to_be_sent, 'ether'),
+                'value': self.w3.to_wei(eth_to_be_sent, 'ether'),
                 'gas': gas_limit,
                 'gasPrice': gas_price,
             }
@@ -317,9 +330,9 @@ class Client(BaseXChainClient, IEthereumClient):
             }
         smart_contract = await self.get_contract(contract_address=contract_address, erc20=erc20)
         contract_func = smart_contract.functions[func_to_call]
-        raw_tx = contract_func(*args).buildTransaction(tx)
+        raw_tx = contract_func(*args).build_transaction(tx)
         signed_tx = self.account.sign_transaction(raw_tx)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         receipt = self.w3.eth.wait_for_transaction_receipt(transaction_hash=tx_hash, timeout=600)
         return receipt
 

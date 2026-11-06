@@ -1,5 +1,5 @@
 import json
-import http3
+import httpx
 
 BITCORE_URL = 'https://api.bitcore.io/api/BCH'
 
@@ -16,7 +16,7 @@ async def broadcast_tx(network, tx_hex):
         api_url = f'{BITCORE_URL}/{network}/tx/send'
 
 
-        client = http3.AsyncClient(timeout=5)
+        client = httpx.AsyncClient(timeout=5)
         data = {
             'rawTx': tx_hex,
             'network': network,

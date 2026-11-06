@@ -73,15 +73,19 @@ def calc_fee(fee_rate, memo=None, utxos=None):
     #     dest, amount, currency = output
     #     outputs[i] = (dest, transaction.currency_to_satoshi_cached(amount, currency))
     # num_outputs = len(outputs) + 1
-    num_outputs = 2
-
-    total_op_return_size = 0
+    # Newer bitcash expects the scripts themselves, rather than an output
+    # count plus a separate OP_RETURN byte size.
+    output_scripts = [bytes(25), bytes(25)]
     if memo:
-        message_chunks = transaction.chunk_data(memo, transaction.MESSAGE_LIMIT)
+        message_chunks = transaction.chunk_data(memo.encode('utf-8'), transaction.MESSAGE_LIMIT)
         for message in message_chunks:
-            total_op_return_size += transaction.get_op_return_size(message, custom_pushdata=False)
+            if len(message) <= 75:
+                push_data = bytes([len(message)]) + message
+            else:
+                push_data = b'\x4c' + bytes([len(message)]) + message
+            output_scripts.append(b'\x6a' + push_data)
 
-    calculated_fee = transaction.estimate_tx_fee(utxos_len, num_outputs, fee_rate, False, total_op_return_size)
+    calculated_fee = transaction.estimate_tx_fee(utxos_len, output_scripts, fee_rate, False)
     return calculated_fee
 
 async def scan_UTXOs(haskoin_url, network, address):

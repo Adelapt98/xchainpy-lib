@@ -11,7 +11,7 @@ Litecoin Module for XChainPy Clients
 Following dependencies have to be installed into your project
 
 ```
-bip_utils, bitcoinlib , xchainpy_client , xchainpy_crypto , xchainpy_util , http3
+bip_utils, bitcoinlib , xchainpy_client , xchainpy_crypto , xchainpy_util , httpx
 ```
 
 ## Service Providers

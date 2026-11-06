@@ -1,7 +1,5 @@
-from bip_utils.bip.bip_keys import BipPrivateKey
 from mnemonic import Mnemonic
-from bip_utils import Bip32, P2WPKH, LitecoinConf
-from bip_utils.conf import Bip32Conf
+from bip_utils import Bip32PrivateKey, Bip32Slip10Secp256k1, P2WPKHAddrEncoder, CoinsConf
 
 def mnemonic_to_seed(mnemonic, language="english"):
     """Convert mnemonic (phrase) to seed
@@ -16,7 +14,7 @@ def mnemonic_to_seed(mnemonic, language="english"):
     seed = mnemo.to_seed(mnemonic)
     return seed
 
-def mnemonic_to_private_key(mnemonic:str, derivation_path:str, network:str, mnemonic_language:str='english') -> BipPrivateKey:
+def mnemonic_to_private_key(mnemonic:str, derivation_path:str, network:str, mnemonic_language:str='english') -> Bip32PrivateKey:
     """Convert mnemonic (phrase) to a private key
 
     :param mnemonic: A phrase
@@ -28,8 +26,7 @@ def mnemonic_to_private_key(mnemonic:str, derivation_path:str, network:str, mnem
     :returns: private_key
     """
     seed = mnemonic_to_seed(mnemonic=mnemonic, language=mnemonic_language)
-    key_net_ver = Bip32Conf.KEY_NET_VER.Test() if network == 'testnet' else Bip32Conf.KEY_NET_VER.Main()
-    bip32_ctx = Bip32.FromSeedAndPath(seed, derivation_path, key_net_ver)
+    bip32_ctx = Bip32Slip10Secp256k1.FromSeedAndPath(seed, derivation_path)
     private_key = bip32_ctx.PrivateKey()
 
     return private_key
@@ -48,9 +45,9 @@ def mnemonic_to_address(mnemonic:str, derivation_path:str, network:str, mnemonic
     :returns: address
     """
     seed = mnemonic_to_seed(mnemonic=mnemonic, language=mnemonic_language)
-    bip32_ctx = Bip32.FromSeedAndPath(seed, derivation_path)
+    bip32_ctx = Bip32Slip10Secp256k1.FromSeedAndPath(seed, derivation_path)
     public_key_bytes = bip32_ctx.PublicKey().RawCompressed().ToBytes()
 
-    net_addr_ver = LitecoinConf.P2WPKH_NET_VER.Test() if network == 'testnet' else LitecoinConf.P2WPKH_NET_VER.Main()
-    address = P2WPKH.ToAddress(pub_key_bytes=public_key_bytes, net_addr_ver=net_addr_ver)
+    chain_conf = CoinsConf.LitecoinTestNet if network == 'testnet' else CoinsConf.LitecoinMainNet
+    address = P2WPKHAddrEncoder.EncodeKey(public_key_bytes, hrp=chain_conf.ParamByKey('p2wpkh_hrp'))
     return address
