@@ -1,5 +1,4 @@
-import json
-import http3
+import httpx
 
 
 async def broadcast_tx(blockstream_url, network, tx_hex):
@@ -14,19 +13,17 @@ async def broadcast_tx(blockstream_url, network, tx_hex):
     :type tx_hex: str
     :returns: Transaction ID
     """
+    from .esplora_api import api_base_url
+
+    if not isinstance(tx_hex, str) or not tx_hex or len(tx_hex) % 2:
+        raise ValueError('Transaction must be a non-empty even-length hex string')
     try:
-        if network == 'testnet':
-            api_url = f'{blockstream_url}/testnet/api/tx'
-        else:
-            api_url = f'{blockstream_url}/api/tx'
+        bytes.fromhex(tx_hex)
+    except ValueError as exc:
+        raise ValueError('Transaction must contain valid hexadecimal characters') from exc
 
-        client = http3.AsyncClient(timeout=5)
-        response = await client.post(url=api_url, data=tx_hex)
-
-        if response.status_code == 200:
-            res = str(response.content.decode('utf-8'))
-            return res
-        else:
-            raise Exception(str(response.content.decode('utf-8')))
-    except Exception as err:
-        raise Exception(str(err))
+    url = f'{api_base_url(blockstream_url, network)}/tx'
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.post(url, content=tx_hex, headers={'Content-Type': 'text/plain'})
+        response.raise_for_status()
+        return response.text.strip()

@@ -1,13 +1,15 @@
 from xchainpy_client.models.tx_types import TX, TxHistoryParams, TxPage
+from decimal import Decimal
+import math
 from xchainpy_client.utxo_client import UTXOClient
 from xchainpy_util.chain import Chain
 from . models.client_types import BitcoinTxParams, BitcoinClientParams
-from . import crypto, sochain_api
+from . import crypto, esplora_api
 from . import utils
 
 
 class Client(UTXOClient):
-    sochain_url = blockstream_url = ''
+    blockstream_url = ''
 
     def __init__(self, params:BitcoinClientParams):
         """
@@ -16,16 +18,7 @@ class Client(UTXOClient):
         """
         UTXOClient.__init__(self, Chain.Bitcoin, params)
 
-        self.set_sochain_url(params.sochain_url)
         self.set_blockstream_url(params.blockstream_url)
-
-    def set_sochain_url(self, sochain_url:str):
-        """Set/Update the sochain url
-
-        :param sochain_url: The new sochain url
-        :type sochain_url: str
-        """
-        self.sochain_url = sochain_url
 
     def set_blockstream_url(self, blockstream_url:str):
         """Set/Update the blockstream url
@@ -96,7 +89,7 @@ class Client(UTXOClient):
         :type address: str
         :returns: The BTC balance of the address
         """
-        balance = await utils.get_balance(self.sochain_url, address, self.get_network())
+        balance = await utils.get_balance(self.blockstream_url, address, self.get_network())
         return balance
 
     async def get_transactions(self, params:TxHistoryParams) -> TxPage:
@@ -108,17 +101,10 @@ class Client(UTXOClient):
         :returns: The transaction history
         """
         try:
-            transactions = await sochain_api.get_transactions(self.sochain_url, self.get_network(), params.address)
-            total = transactions['total_txs']
-            offset = params.offset or 0
-            limit = params.limit or 10
-            transactions['txs'] = transactions['txs'][offset:offset+limit]
-            txs = []
-            for tx in transactions['txs']:
-                tx = await sochain_api.get_tx(self.sochain_url, self.get_network(), tx['txid'])
-                tx = utils.parse_tx(tx)
-                txs.append(tx)
- 
+            total, raw_txs = await esplora_api.get_transactions(
+                self.blockstream_url, self.get_network(), params.address,
+                offset=params.offset or 0, limit=params.limit or 10)
+            txs = [esplora_api.parse_tx(tx) for tx in raw_txs]
             return TxPage(total=total, txs=txs)
 
         except Exception as err:
@@ -135,14 +121,14 @@ class Client(UTXOClient):
         :returns: The transaction details of the given transaction id
         """
         try:
-            tx = await sochain_api.get_tx(self.sochain_url, self.get_network(), tx_id)
-            tx = utils.parse_tx(tx)
+            tx = await esplora_api.get_tx(self.blockstream_url, self.get_network(), tx_id)
+            tx = esplora_api.parse_tx(tx)
             return tx
         except Exception as err:
             raise Exception(str(err))
 
     async def _get_suggested_fee_rate(self):
-        fee_rate = await sochain_api.get_suggested_tx_fee()
+        fee_rate = await esplora_api.get_suggested_tx_fee(self.blockstream_url, self.get_network())
         return fee_rate
 
     def _calc_fee(self, fee_rate, memo):
@@ -160,10 +146,22 @@ class Client(UTXOClient):
             fee_rates = await self.get_fee_rates()
             params.fee_rate = fee_rates.fast
 
-        spend_pending_UTXO = False if params.memo else True
+        # Do not spend unconfirmed outputs by default.
+        spend_pending_UTXO = False
 
-        t, utxos = await utils.build_tx(sochain_url=self.sochain_url, amount=round(params.amount*10**8), recipient=params.recipient,
-                                        memo=params.memo, fee_rate=params.fee_rate, sender=self.get_address(), network=self.get_network(), 
+        if not self.validate_address(self.get_network(), params.recipient):
+            raise ValueError('Invalid address')
+        if not isinstance(params.wallet_index, int) or isinstance(params.wallet_index, bool) or params.wallet_index < 0:
+            raise ValueError('wallet_index must be a non-negative integer')
+        if (not isinstance(params.amount, (int, float, Decimal)) or
+                isinstance(params.amount, bool) or not math.isfinite(float(params.amount)) or params.amount <= 0):
+            raise ValueError('amount must be positive')
+        if (not isinstance(params.fee_rate, (int, float)) or
+                not math.isfinite(float(params.fee_rate)) or params.fee_rate <= 0):
+            raise ValueError('fee_rate must be positive')
+
+        t, utxos = await utils.build_tx(sochain_url=self.blockstream_url, amount=round(params.amount*10**8), recipient=params.recipient,
+                                        memo=params.memo, fee_rate=params.fee_rate, sender=self.get_address(params.wallet_index), network=self.get_network(),
                                         spend_pending_UTXO=spend_pending_UTXO)
 
         derivation_path = self.root_derivation_paths.testnet if self.get_network() == 'testnet' else self.root_derivation_paths.mainnet
@@ -171,5 +169,8 @@ class Client(UTXOClient):
         private_key = crypto.mnemonic_to_private_key(self.phrase, derivation_path, self.get_network())
         private_bytes = private_key.Raw().ToBytes()
         t.sign(private_bytes)
+
+        if not t.verify():
+            raise ValueError('Locally signed Bitcoin transaction did not verify; broadcast cancelled')
 
         return await utils.broadcast_tx(self.blockstream_url, self.get_network(), t.raw_hex())

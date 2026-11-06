@@ -10,7 +10,7 @@ class BitcoinClientParams(XChainClientParams):
                      # note this isn't bip44 compliant, but it keeps the wallets generated compatible to pre HD wallets
                      mainnet="m/84'/0'/0'/0/",
                      testnet="m/84'/1'/0'/0/"),
-                 sochain_url:str='https://sochain.com/api/v2', blockstream_url:str='https://blockstream.info'):
+                 sochain_url:str=None, blockstream_url:str='https://blockstream.info'):
         """
         :param network: network
         :type network: str
@@ -18,7 +18,7 @@ class BitcoinClientParams(XChainClientParams):
         :type phrase: str
         :param root_derivation_paths: root_derivation_paths 
         :type root_derivation_paths: RootDerivationPaths
-        :param sochain_url: sochainUrl 
+        :param sochain_url: Deprecated, ignored by the Bitcoin client.
         :type sochain_url: str
         :param blockstream_url: blockstreamUrl 
         :type blockstream_url: str

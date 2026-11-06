@@ -3,7 +3,7 @@ from bitcoinlib.keys import Address
 from typing import List, Optional, Union
 from .const import MIN_TX_FEE
 from .models.common import DerivePath, UTXO
-from . import sochain_api, haskoin_api, blockstream_api
+from . import blockstream_api, esplora_api
 from bitcoinlib.services.services import *
 from xchainpy_util.asset import AssetBTC
 from xchainpy_client.fees import standard_fees, calc_fees
@@ -83,20 +83,15 @@ def compile_memo(memo: str):
     metadata_len = len(metadata)
 
     if metadata_len <= 75:
-        # length byte + data (https://en.bitcoin.it/wiki/Script)
-        payload = bytearray((metadata_len,))+metadata
-    elif metadata_len <= 256:
-        # OP_PUSHDATA1 format
-        payload = "\x4c"+bytearray((metadata_len,))+metadata
+        payload = bytes((metadata_len,)) + metadata
+    elif metadata_len <= 255:
+        payload = b'\x4c' + bytes((metadata_len,)) + metadata
+    elif metadata_len <= 65535:
+        payload = b'\x4d' + metadata_len.to_bytes(2, 'little') + metadata
     else:
-        payload = "\x4d"+bytearray((metadata_len % 256,))+bytearray(
-            (int(metadata_len/256),))+metadata  # OP_PUSHDATA2 format
-    
+        raise ValueError('Memo exceeds the maximum OP_PUSHDATA2 size')
 
-    compiled_memo = binascii.b2a_hex(payload).decode('utf-8')
-    compiled_memo = '6a' + compiled_memo
-    compiled_memo = binascii.unhexlify(compiled_memo)
-    return compiled_memo
+    return b'\x6a' + payload
 
 
 def validate_address(network, address):
@@ -109,7 +104,7 @@ def validate_address(network, address):
     :returns: True or False
     """
     try:
-        address = Address.import_address(address=address, network=(
+        address = Address.parse(address=address, network=(
             'bitcoin' if network == 'mainnet' else network))
         return True
     except:
@@ -145,7 +140,7 @@ def get_fee(inputs: List[UTXO], fee_rate: float, data: Optional[bytes]=None):
 
 
 async def scan_UTXOs(sochain_url, network, address, confirmed_only=True):
-    """Scan UTXOs from sochain
+    """Scan native SegWit wallet UTXOs from Esplora.
 
     :param sochain_url: sochain url
     :type sochain_url: str
@@ -157,28 +152,7 @@ async def scan_UTXOs(sochain_url, network, address, confirmed_only=True):
     :type confirmed_only: bool
     :returns: The UTXOs of the given address
     """
-    if network == 'testnet':
-        if confirmed_only:
-            utxos = await sochain_api.get_confirmed_unspent_txs(sochain_url, network, address)
-        else:
-            utxos = await sochain_api.get_unspent_txs(sochain_url, network, address)
-
-        utxos = list(map(sochain_api.sochain_utxo_to_xchain_utxo, utxos))
-    else:
-        if confirmed_only:
-            utxos = await haskoin_api.get_confirmed_unspent_txs(address)
-        else:
-            utxos = await haskoin_api.get_unspent_txs(address)
-
-        utxos = list(map(haskoin_api.haskoin_utxo_to_xchain_utxo, utxos))
-
-    return utxos
-
-
-
-    # utxos = await sochain_api.get_unspent_txs(sochain_url, network, address)
-    # utxos = list(map(UTXO.from_sochain_utxo, utxos))
-    # return utxos
+    return await esplora_api.get_unspent_txs(sochain_url, network, address, confirmed_only)
 
 
 async def get_change(sochain_url:str, value_out, network:str, address:str):
@@ -195,7 +169,7 @@ async def get_change(sochain_url:str, value_out, network:str, address:str):
     :returns: The UTXOs of the given address
     """
     try:
-        balance = await sochain_api.get_balance(sochain_url, network, address)
+        balance = await get_balance(sochain_url, address, network)
         balance = round(balance[0].amount * 10 ** 8)
         change = 0
         if balance - value_out > DUST_THRESHOLD:
@@ -234,8 +208,6 @@ async def build_tx(sochain_url, amount, recipient, memo, fee_rate, sender, netwo
         if len(utxos) == 0:
             raise Exception("No utxos to send")
 
-        balance = await sochain_api.get_balance(sochain_url, network, sender)
-        
         if not validate_address(network, recipient):
             raise Exception('Invalid address')
         
@@ -247,17 +219,26 @@ async def build_tx(sochain_url, amount, recipient, memo, fee_rate, sender, netwo
 
         fee = get_fee(utxos, fee_rate_whole, compiled_memo)
 
-        if fee + amount > round(balance[0].amount * 10 ** 8):
+        available = sum(i.witness_utxo.value for i in utxos)
+        if fee + amount > available:
             raise Exception('Balance insufficient for transaction')
 
-        t = Transaction(network=network, witness_type='segwit')
+        t = Transaction(network='bitcoin' if network == 'mainnet' else 'testnet', witness_type='segwit')
 
         for i in utxos:
+            script = bytes(i.witness_utxo.script)
+            if len(script) != 22 or not script.startswith(b'\x00\x14'):
+                raise ValueError('Cannot sign non-P2WPKH UTXO')
             t.add_input(prev_txid=i.hash, output_n=i.index,
-                    value=i.witness_utxo.value, witnesses=i.witness_utxo.script)
+                        value=i.witness_utxo.value, locking_script=script,
+                        script_type='sig_pubkey', witness_type='segwit', public_hash=script[2:])
 
         t.add_output(address=recipient, value=amount)
-        change = await get_change(sochain_url, amount + fee, network, sender)
+        change = available - amount - fee
+        if change < 0:
+            raise ValueError('Selected UTXOs insufficient for transaction')
+        if 0 < change <= DUST_THRESHOLD:
+            change = 0  # Dust is included in the miner fee.
         
         if change > 0:
             
@@ -297,14 +278,4 @@ async def get_balance(sochain_url:str, address:str, network:str):
     :type network: str
     :returns: The BTC balance of the address
     """
-    try:
-        if network == 'testnet':
-            balance = await sochain_api.get_balance(sochain_url, network, address)
-        else:
-            balance = await haskoin_api.get_balance(address)
-        
-        if balance == None:
-            raise Exception("Invalid Address")
-        return balance
-    except Exception as err:
-        raise Exception(str(err))
+    return await esplora_api.get_balance(sochain_url, network, address)

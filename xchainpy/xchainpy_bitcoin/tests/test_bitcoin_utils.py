@@ -28,25 +28,3 @@ class TestBitcoinUtils:
         assert fees.average
         assert fees.fast
         assert fees.fastest
-
-    @pytest.mark.asyncio
-    async def test_get_utxos_associated_with_an_address(self):
-        address = '34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo'
-        utxos = await utils.scan_UTXOs(
-            sochain_url='https://sochain.com/api/v2',
-            network='mainnet',
-            address=address,
-            confirmed_only=False, # get all confirmed & unconfirmed UTXOs
-            )
-        assert len(utxos) > 100
-        
-    @pytest.mark.asyncio
-    async def test_get_utxos_associated_with_a_testnet_address(self):
-        address = '2NA8UF8xz2KMgyW7AzxKRiaJQjSx1zBr7gi'
-        utxos = await utils.scan_UTXOs(
-            sochain_url='https://sochain.com/api/v2',
-            network='testnet',
-            address=address,
-            confirmed_only=False, # get all confirmed & unconfirmed UTXOs
-            )
-        assert len(utxos) > 100

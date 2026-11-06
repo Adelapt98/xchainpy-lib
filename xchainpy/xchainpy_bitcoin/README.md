@@ -11,7 +11,7 @@ Bitcoin Module for XChainPy Clients
 Following dependencies have to be installed into your project
 
 ```
-bip_utils, bitcoinlib , http3 , xchainpy_client , xchainpy_crypto , xchainpy_util
+bip_utils, bitcoinlib , httpx , xchainpy_client , xchainpy_crypto , xchainpy_util
 ```
 
 ## Service Providers
