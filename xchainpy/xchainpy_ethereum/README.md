@@ -1,58 +1,21 @@
-# `xchainpy/xchainpy_ethereum`
+# Ethereum client
 
-Ethereum Module for XChainPy Clients
+Ethereum and contract helpers updated for web3.py 8, HTTP JSON-RPC and Etherscan v2 ABI requests.
 
-## Environment
-tested with Python Virtual Environment 3.8 3.9
+## Current status
 
-## Installation
-```angular2html
-python3 setup.py install
-```
+Limited offline compatibility tests. Live transaction workflows need broader verification.
 
-## Service Providers
-- ``Infura WSS API`` was used to interact with ethereum blockchain, head to https://infura.io/ to get your own websocket token.
-- If interaction with ``non-ERC20 token`` is needed, head to https://etherscan.io/ to get your etherscan token.
+## Development setup
 
-## Initialization of Client
-Pass in your infura WSS api token as network, and pass your ether token as ether_api (not enforced).
-initialization of parameters for xchainpy_etheruem client
-```
-    prefix = "../xchainpy_ethereum/resources/testnet/"
-    mnemonic = open(prefix + "mnemonic", 'r').readline()
-``` 
-web3 websocket provider is needed, e.g. infura
-```
-    wss = open(prefix + "infura", 'r').readline()
-```
-etherscan api is needed if there's intention to interact with non ERC20 token
-the client will fetch abi for specific contract
-```
-    eth_api = open("../xchainpy_ethereum/resources/ether_api", 'r').readline()
-    params = EthereumClientParams(wss_provider=wss, etherscan_token=eth_api, phrase=mnemonic)
-```
+Follow the [repository setup and tests](../../README.md), which install active packages from local editable paths on Python 3.12. The THORChain reference package is excluded from that workflow. Importing a client does not verify its live provider.
 
-Head to ``test/test_ropsten_client.py`` to see a
-more comprehensive way to using this client.
-## Tests
+See the [roadmap](../../ROADMAP.md) and the [Bitcoin-specific verification record](../../TESTNET_VERIFICATION.md) for planned work and integration boundaries.
 
-These packages needed to run tests:
+## Credentials
 
-- pytest `pip install pytest`
-- pytest-asyncio `pip install pytest-asyncio`
+Keep RPC credentials, recovery phrases and private keys outside the source tree. Shared tests should use documented public fixtures and mocked providers. Never fund a wallet derived from a published test vector.
 
-How to run test ?
+## License
 
-```angular2html
-cd test/
-```
-``Ropsten``
-```bash
-$ pytest test_ropsten_client.py
-```
-``Mainnet``
-```bash
-$ pytest test_mainnet_client.py
-```
-
-
+MIT. The existing [package license and copyright notice](LICENSE) are retained.

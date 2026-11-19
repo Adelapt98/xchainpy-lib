@@ -63,4 +63,8 @@ This will send testnet coins to the disposable wallet's next derived address, pr
 
 ## Source and history
 
-This output has a **new sanitized Git history**, separate from the original uploaded archive. No remote is configured, nothing was pushed, and the distributed source ZIP omits `.git`, environments and caches. An optional Git bundle is included separately for local restoration. Do **not** upload the Git bundle as task source code.
+This note describes the modernized continuation of the original XChainPY repository. The reviewed checkout retains earlier development history and subsequent modernization commits. Source archives supplied to coding sessions should exclude `.git`, virtual environments and generated wallet databases.
+
+## Offline recheck, 12 November 2026
+
+A fresh isolated Python 3.12 environment installed the seven active editable packages. The four existing offline groups passed: 13 core tests, 9 UTXO utility tests, 4 Ethereum asset tests and 66 regression tests, for 92 in total. All seven package imports succeeded and `uv pip check` reported 76 installed packages compatible. The README's offline example also ran successfully. This recheck made no live RPC request or transaction broadcast and does not extend the earlier testnet evidence. Existing bitcoinlib/SQLAlchemy deprecation warnings remain.

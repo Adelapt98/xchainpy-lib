@@ -1,6 +1,6 @@
 # XChainPy testing guide for Windows PowerShell
 
-This guide is for the locally repaired XChainPy development snapshot. Run all commands from the repository root in **PowerShell**, using an existing `.venv` when available. `bash scripts/*.sh` requires Bash and does not work in ordinary Windows PowerShell without Git Bash/WSL.
+This guide covers the maintained XChainPY checkout. Run all commands from the repository root in **PowerShell**, using an existing `.venv` when available. `bash scripts/*.sh` requires Bash and does not work in ordinary Windows PowerShell without Git Bash/WSL.
 
 **Scope and safety:** Bitcoin **testnet3**, not testnet4, signet, or Bitcoin mainnet. Testnet coins have no monetary value. Do not use a real wallet or real funds. Never paste a seed phrase into websites, source code, screenshots, Git commits, or chat. The code is unaudited and is not safe for production funds.
 

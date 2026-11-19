@@ -1,58 +1,21 @@
-# `xchainpy/xchainpy-util`
+# Asset and chain utilities
 
-Utitity helpers for XChain clients
+Asset, ticker and chain definitions shared by client packages.
 
-## Modules (in alphabetical order)
+## Current status
 
-- `asset` - Utilities for handling assets
-- `chain` - Utilities for multi-chain
+Offline utility tests.
 
------------
+## Development setup
 
-## Usage
+Follow the [repository setup and tests](../../README.md), which install active packages from local editable paths on Python 3.12. The THORChain reference package is excluded from that workflow. Importing a client does not verify its live provider.
 
-```bash
-pip install xchainpy_util
-```
+See the [roadmap](../../ROADMAP.md) and the [Bitcoin-specific verification record](../../TESTNET_VERIFICATION.md) for planned work and integration boundaries.
 
-Asset
------------------
+## Credentials
 
-```python
-from xchainpy_util.asset import Asset
+Keep RPC credentials, recovery phrases and private keys outside the source tree. Shared tests should use documented public fixtures and mocked providers. Never fund a wallet derived from a published test vector.
 
-asset = Asset(chain='BNB', symbol='RUNE-67C')
-print(asset.chain)
-print(asset.symbol)
-print(asset.ticker)
+## License
 
-asset = Asset(chain='BTC', symbol='BTC', ticker='BTC')
-print(asset)
- ```
-
-Chain
------------------
-
-```python
-from xchainpy_util import chain
-from xchainpy_util.chain import Chain
-is_chain = chain.is_chain(Chain.Bitcoin)
-print(is_chain)
-
-is_chain = chain.is_chain('BTC')
-print(is_chain)
- ```
-    
-
-## Tests
-
-These packages needed to run tests:
-
-- pytest `pip install pytest`
-
-How to run tests?
-
-```bash
-$ python -m pytest xchainpy/xchainpy_util/tests
-```
-
+MIT. The existing [package license and copyright notice](LICENSE) are retained.
