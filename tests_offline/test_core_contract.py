@@ -11,7 +11,8 @@ from xchainpy_util.chain import Chain
 
 
 # A public, deterministic BIP39 test vector. Never use it for a funded wallet.
-TEST_PHRASE = 'REDACTED'
+# Public BIP39 vectors: https://github.com/trezor/python-mnemonic/blob/master/vectors.json
+TEST_PHRASE = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 
 
 class DummyClient(BaseXChainClient):

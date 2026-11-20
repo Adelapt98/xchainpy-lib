@@ -10,7 +10,8 @@ from xchainpy_bitcoin import utils as bitcoin_utils
 from xchainpy_client.models.tx_types import TxHistoryParams
 
 
-TEST_PHRASE = 'REDACTED'
+# Public BIP39 vectors: https://github.com/trezor/python-mnemonic/blob/master/vectors.json
+TEST_PHRASE = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 
 
 def new_client(network='testnet'):

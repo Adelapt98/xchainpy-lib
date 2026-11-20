@@ -5,9 +5,10 @@ from xchainpy_crypto import crypto
 
 class TestCrypto:
 
-    # Note: This phrase is created by https://iancoleman.io/bip39/ and will never been used in a real-world
-    phrase = 'REDACTED'
-    phrase2 = 'REDACTED'
+    # Public BIP39 vectors: https://github.com/trezor/python-mnemonic/blob/master/vectors.json
+    phrase = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
+    phrase2 = 'legal winner thank year wave sausage worth useful legal winner thank yellow'
+
     def test_valid_phrase(self):
         assert crypto.validate_phrase(self.phrase) == True
 

@@ -10,7 +10,8 @@ from xchainpy_bitcoin.crypto import mnemonic_to_address, mnemonic_to_private_key
 from xchainpy_bitcoin.models.common import UTXO, Witness_UTXO
 
 
-TEST_PHRASE = 'REDACTED'
+# Public BIP39 vectors: https://github.com/trezor/python-mnemonic/blob/master/vectors.json
+TEST_PHRASE = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 TEST_PATH = "m/84'/1'/0'/0/0"
 TEST_ADDRESS = mnemonic_to_address(TEST_PHRASE, TEST_PATH, 'testnet')
 
